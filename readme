@@ -1,3 +1,5 @@
+去除了critic函数，独立的避障机制
+
 xtensor: 21版本
 colcon build --packages-select mppi_laser_example
 

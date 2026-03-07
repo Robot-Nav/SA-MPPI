@@ -43,8 +43,8 @@ class FixedPathPublisher(Node):
         
         # 参数声明
         self.declare_parameter('path_type', 'straight')
-        self.declare_parameter('path_length', 25.0)  # 直线路径长度改为25
-        self.declare_parameter('path_points', 200)
+        self.declare_parameter('path_length', 8.0)
+        self.declare_parameter('path_points', 50)
         self.declare_parameter('frame_id', 'map')
         self.declare_parameter('publish_rate', 1.0)
         self.declare_parameter('start_x', 0.0)      # 固定起点x
@@ -125,12 +125,12 @@ class FixedPathPublisher(Node):
         return path_msg
     
     def generate_straight_path(self) -> List[PoseStamped]:
-        """生成直线路径 - 使用固定起点，长度25m"""
+        """生成直线路径 - 使用固定起点"""
         poses = []
         
-        # 终点坐标（沿固定朝向方向，长度25m）
-        end_x = self.start_x + 25.0 * math.cos(self.start_yaw)
-        end_y = self.start_y + 25.0 * math.sin(self.start_yaw)
+        # 终点坐标（沿固定朝向方向）
+        end_x = self.start_x + self.path_length * math.cos(self.start_yaw)
+        end_y = self.start_y + self.path_length * math.sin(self.start_yaw)
         
         for i in range(self.path_points):
             t = i / (self.path_points - 1)
@@ -143,41 +143,41 @@ class FixedPathPublisher(Node):
             pose = self.create_pose_stamped(x, y, yaw)
             poses.append(pose)
         
-        self.get_logger().info(f'Generated straight path of 25m from ({self.start_x:.2f}, {self.start_y:.2f}) to ({end_x:.2f}, {end_y:.2f})')
+        self.get_logger().info(f'Generated straight path from ({self.start_x:.2f}, {self.start_y:.2f}) to ({end_x:.2f}, {end_y:.2f})')
         return poses
     
     def generate_three_side_rectangle_path(self) -> List[PoseStamped]:
-        """生成不闭合的三边矩形路径 - 使用固定起点
-           路径形状：起点在左下角，向右走25m，向上走20m，向左走25m
+        """生成4x6m不闭合的三边矩形路径 - 使用固定起点
+           路径形状：起点在右下角，向上走6m，向左走4m，向下走6m
            终点在左上角，起点和终点不重合"""
         poses = []
         
         # 矩形尺寸
-        width = 25.0   # x方向宽度（水平方向）- 向右走25m
-        height = 20.0  # y方向高度（垂直方向）- 向上走20m
+        width = 4.0   # x方向宽度（水平方向）
+        height = 6.0  # y方向高度（垂直方向）
         
         # 定义三个边的关键点（相对于起点，逆时针方向）
-        # 起点：左下角 (0, 0)
-        # 第1边：向右到右下角 (width, 0)
-        # 第2边：向上到右上角 (width, height)
-        # 第3边：向左到左上角 (0, height)
+        # 起点：右下角 (0, 0)
+        # 第1边：向上到右上角 (0, height)
+        # 第2边：向左到左上角 (-width, height)
+        # 第3边：向下到左下角 (-width, 0)
         
         # 三个线段
         segments = [
-            # 第1边：从起点(0,0) 向右到 (width, 0)
-            {'start': (0.0, 0.0), 'end': (width, 0.0)},
+            # 第1边：从起点(0,0)到右上角(0, height)
+            {'start': (0.0, 0.0), 'end': (0.0, height)},
             
-            # 第2边：从 (width, 0) 向上到 (width, height)
-            {'start': (width, 0.0), 'end': (width, height)},
+            # 第2边：从右上角(0, height)到左上角(-width, height)
+            {'start': (0.0, height), 'end': (-width, height)},
             
-            # 第3边：从 (width, height) 向左到 (0, height)
-            {'start': (width, height), 'end': (0.0, height)}
+            # 第3边：从左上角(-width, height)到左下角(-width, 0)
+            {'start': (-width, height), 'end': (-width, 0)}
         ]
         
         # 计算每个边的点数（按路径长度比例分配）
-        total_length = width + height + width  # 25 + 20 + 25 = 70m
-        points_side1 = max(2, int(self.path_points * width / total_length))
-        points_side2 = max(2, int(self.path_points * height / total_length))
+        total_length = height + width + height  # 6 + 4 + 6 = 16m
+        points_side1 = max(2, int(self.path_points * height / total_length))
+        points_side2 = max(2, int(self.path_points * width / total_length))
         points_side3 = max(2, self.path_points - points_side1 - points_side2)
         
         points_per_segment = [points_side1, points_side2, points_side3]
@@ -222,34 +222,29 @@ class FixedPathPublisher(Node):
                 pose = self.create_pose_stamped(x, y, yaw)
                 poses.append(pose)
         
-        # 计算实际终点坐标（左上角）
-        end_rel_x = 0.0
-        end_rel_y = height
+        # 计算实际终点坐标（左下角）
+        end_rel_x = -width
+        end_rel_y = 0.0
         end_x = self.start_x + end_rel_x * math.cos(self.start_yaw) - end_rel_y * math.sin(self.start_yaw)
         end_y = self.start_y + end_rel_x * math.sin(self.start_yaw) + end_rel_y * math.cos(self.start_yaw)
         
-        self.get_logger().info(f'Generated 25x20m three-side rectangle path')
-        self.get_logger().info(f'  Start point (左下角): ({self.start_x:.2f}, {self.start_y:.2f})')
-        self.get_logger().info(f'  End point (左上角): ({end_x:.2f}, {end_y:.2f})')
+        self.get_logger().info(f'Generated 4x6m three-side rectangle path')
+        self.get_logger().info(f'  Start point (右下角): ({self.start_x:.2f}, {self.start_y:.2f})')
+        self.get_logger().info(f'  End point (左下角): ({end_x:.2f}, {end_y:.2f})')
         self.get_logger().info(f'  Points per side: {points_side1}, {points_side2}, {points_side3}')
-        self.get_logger().info(f'  Distances: right 25m, up 20m, left 25m (total 70m)')
         
         return poses
     
     def generate_custom_path(self) -> List[PoseStamped]:
-        """生成自定义S形路径 - 使用固定起点，长度50m"""
+        """生成自定义S形路径 - 使用固定起点"""
         poses = []
-        
-        # 振幅和频率参数
-        amplitude = 2.0  # 振幅（米）
-        frequency = 0.5  # 频率（周期数）
         
         for i in range(self.path_points):
             t = i / (self.path_points - 1)
             
-            # 相对坐标 - 总长度50m
-            rel_x = 50.0 * t
-            rel_y = amplitude * math.sin(2 * math.pi * frequency * t)
+            # 相对坐标
+            rel_x = self.path_length * t
+            rel_y = 0.5 * math.sin(2 * math.pi * t)
             
             # 转换为全局坐标
             x = self.start_x + rel_x * math.cos(self.start_yaw) - rel_y * math.sin(self.start_yaw)
@@ -258,30 +253,18 @@ class FixedPathPublisher(Node):
             # 计算切线方向
             if i < self.path_points - 1:
                 next_t = (i + 1) / (self.path_points - 1)
-                next_rel_x = 50.0 * next_t
-                next_rel_y = amplitude * math.sin(2 * math.pi * frequency * next_t)
+                next_rel_x = self.path_length * next_t
+                next_rel_y = 0.5 * math.sin(2 * math.pi * next_t)
                 dx = next_rel_x - rel_x
                 dy = next_rel_y - rel_y
-                if abs(dx) < 1e-6 and abs(dy) < 1e-6:
-                    yaw = self.start_yaw
-                else:
-                    yaw = math.atan2(dy, dx) + self.start_yaw
+                yaw = math.atan2(dy, dx) + self.start_yaw
             else:
                 yaw = self.start_yaw
             
             pose = self.create_pose_stamped(x, y, yaw)
             poses.append(pose)
         
-        # 计算终点坐标
-        end_rel_x = 50.0
-        end_rel_y = amplitude * math.sin(2 * math.pi * frequency)
-        end_x = self.start_x + end_rel_x * math.cos(self.start_yaw) - end_rel_y * math.sin(self.start_yaw)
-        end_y = self.start_y + end_rel_x * math.sin(self.start_yaw) + end_rel_y * math.cos(self.start_yaw)
-        
-        self.get_logger().info(f'Generated custom S-shaped path of 50m')
-        self.get_logger().info(f'  Start: ({self.start_x:.2f}, {self.start_y:.2f})')
-        self.get_logger().info(f'  End: ({end_x:.2f}, {end_y:.2f})')
-        self.get_logger().info(f'  Amplitude: {amplitude}m, Frequency: {frequency} cycles')
+        self.get_logger().info('Generated custom S-shaped path')
         return poses
     
     def create_pose_stamped(self, x: float, y: float, yaw: float) -> PoseStamped:
@@ -326,9 +309,9 @@ def main(args=None):
         print("Fixed Path Publisher Running")
         print("="*50)
         print("Commands:")
-        print("  s - switch to straight path (25m)")
-        print("  t - switch to 25x20m three-side rectangle path (70m total)")
-        print("  u - switch to custom S-shaped path (50m)")
+        print("  s - switch to straight path")
+        print("  t - switch to 4x6m three-side rectangle path (不闭合)")
+        print("  u - switch to custom S-shaped path")
         print("  p - print path info")
         print("  Ctrl+C - exit")
         print("="*50)

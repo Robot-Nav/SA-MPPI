@@ -1,102 +1,89 @@
 mppi_ros2_node:
   ros__parameters:
-    # MPPI核心参数
-    batch_size: 1300
-    time_steps: 90
-    model_dt: 0.05
-    temperature: 0.3
-    gamma: 0.015
-    iteration_count: 1
+    # ================== 核心参数 ==================
+    batch_size: 1300                   # 每次迭代采样的轨迹数量，越大鲁棒性越好但计算量越大
+    time_steps: 90                     # 每条轨迹的时间步数，总预测时域 = time_steps * model_dt = 90*0.05=4.5秒
     control_period_ms: 50
-    thread_count: 4
+    model_dt: 0.05                      # 两个采样点之间的时间间隔（秒）
+    temperature: 0.3                    # 代价对权重的影响程度，越小越贪婪地选择低代价轨迹
+    gamma: 0.015                        # 平滑因子
+    iteration_count: 1                  # 优化迭代次数
+    shift_control_sequence: true        # 是否在每次控制后左移控制序列
+    retry_attempt_limit: 1              # 失败后重置优化器的尝试次数
+    thread_count: 4                      # 并行积分使用的线程数
+    motion_model: "DiffDrive"            # 运动模型类型：DiffDrive, Omni, Ackermann
 
-    # 控制约束
-    vx_max: 0.3
-    vx_min: 0.0
-    vy_max: 0.5
-    wz_max: 2.2
-    ax_max: 1.6
-    ay_max: 2.0
-    az_max: 3.2
+    # ================== 约束 ==================
+    vx_max: 0.3                          # 最大正向线速度（m/s）
+    vx_min: 0.0                          # 最小线速度，设为0禁止倒车
+    
+    vy_max: 0.5                          # 最大横向速度（m/s），仅在全向模型下有效
+    
+    wz_max: 3.0                          # 最大角速度（rad/s）
+    
+    ax_max: 0.15                          # 最大线加速度（m/s²）
+    ay_max: 2.0                          # 最大横向加速度（m/s²）
+    az_max: 6.0                          # 最大角加速度（rad/s²）
 
-    # 噪声采样标准差
-    vx_std: 0.15
-    vy_std: 0.0
-    wz_std: 0.30
+    # ================== 采样噪声 ==================
+    vx_std: 0.15                         # 线速度采样标准差
+    vy_std: 0.0                          # 横向速度采样标准差，差速模型无效
+    wz_std: 0.3                          # 角速度采样标准差
 
-    # 障碍物代价参数
-    obstacle_repulsion_weight: 0.2
-    obstacle_critical_weight: 10.0
-    obstacle_collision_cost: 10000.0
-    obstacle_collision_margin: 0.1
-    collision_cost_threshold: 5000.0
-    obstacle_inflation_radius: 0.2
-    obstacle_cost_scaling: 3.0
-    obstacle_near_goal_distance: 0.3
-    robot_radius: 0.08
-    consider_footprint: false
-    grid_resolution: 0.05
-    grid_width: 100
-    grid_height: 100
+    # ================== 独立避障参数 ==================
+    # 全局绕障开关
+    enable_avoidance: true               # 若为false，遇到任何障碍物均只执行刹停，不尝试绕行
+    
+    # 横向绕行限制
+    max_lateral_avoidance_distance: 0.5  # 允许的最大横向绕行距离（米），超过此值放弃绕障执行刹停
+    
+    # 安全间隙
+    safety_margin_lateral: 0.2           # 车辆与障碍物之间的横向安全间隙（米）
+    safety_margin_longitudinal: 0.5      # 车辆与障碍物之间的纵向安全停车距离（米）
+    
+    # 机器人参数
+    robot_radius: 0.08                   # 机器人几何半径（米）
+    
+    # 紧急制动参数
+    emergency_brake_decel: 2.0           # 紧急制动减速度（m/s²）
+    ttc_emergency_threshold: 0.2         # TTC紧急阈值（秒），碰撞时间小于此值触发紧急制动
+    
+    # 动态障碍物跟随
+    follow_distance: 1.0                 # 跟随动态障碍物时的安全距离（米）
+    
+    # 栅格参数（用于距离场计算）
+    grid_resolution: 0.05                # 局部栅格分辨率（米/像素）
+    grid_width: 100                      # 栅格宽度（像素）
+    grid_height: 100                     # 栅格高度（像素）
+    
+    # 绕障路径生成参数
+    avoidance_lookahead: 3.0             # 向前检测障碍物的距离（米）
+    avoidance_smooth_distance: 0.5       # 绕障平滑过渡距离（米），障碍物前0.5米开始偏移，后1.0米回归原路径
+    avoid_speed_ratio: 0.7               # 绕障时目标速度比例（相对当前速度）
+    min_avoid_speed: 0.08                # 绕障时最小前进速度（m/s），避免陷入原地打转
 
-    # 阻塞检测参数
-    twirling_weight: 0.5
-    spinning_ratio_threshold: 8.0
-    spinning_detect_frames: 4
+    # ================== 路径跟踪代价 ==================
+    path_align_weight: 10.0              # 路径对齐代价权重
+    path_align_offset: 15                # 从最远已到达点向前偏移的点数
+    path_align_threshold: 0.40           # 距离目标小于此值时停用该代价（米）
+    path_align_traj_step: 4              # 每隔几个轨迹点采样计算一次
 
-    # 启动辅助参数
-    startup_boost_vx: 0.06
-    startup_boost_wz_gain: 1.2
-    startup_boost_wz_limit: 0.6
-    startup_cmd_vx_eps: 0.01
-    startup_speed_vx_eps: 0.02
-    startup_goal_distance: 0.3
-    startup_lookahead: 8
+    path_angle_weight: 2.0               # 路径角度代价权重
+    path_angle_offset: 5                 # 向前偏移点数
+    path_angle_threshold: 0.40           # 距离目标小于此值时停用
+    path_angle_max: 0.5                  # 允许的最大角度偏差（弧度）
 
-    # 路径对齐代价参数
-    path_align_weight: 6.0
-    path_align_offset: 20
-    path_align_threshold: 0.4
-    path_align_traj_step: 4
-    path_align_max_occupancy_ratio: 0.0
-    path_align_use_orientations: false
+    path_follow_weight: 6.0              # 路径轨迹终点跟踪代价权重
+    path_follow_offset: 6                # 向前偏移点数
+    path_follow_threshold: 0.1           # 距离目标小于此值时停用（米）
 
-    # 路径角度代价参数
-    path_angle_weight: 2.0
-    path_angle_offset: 4
-    path_angle_threshold: 0.4
-    path_angle_max: 0.5
-    path_angle_mode: 0
+    # ================== 终点代价 ==================
+    goal_weight: 5.0                     # 目标点代价权重
+    goal_threshold: 1.0                  # 距离目标小于此值时激活该代价（米）
+    goal_angle_weight: 3.0               # 目标朝向代价权重
+    goal_angle_threshold: 0.4            # 距离目标小于此值时激活该代价（米）
 
-    # 路径跟随代价参数
-    path_follow_weight: 4.0
-    path_follow_offset: 5
-    path_follow_threshold: 0.6
-
-    # 目标点代价参数
-    goal_weight: 5.0
-    goal_threshold: 1.0
-    goal_angle_weight: 3.0
-    goal_angle_threshold: 0.4
-
-    # 偏好前进代价参数
-    prefer_forward_weight: 5.0
-    prefer_forward_threshold: 0.5
-
-    # 约束代价参数
-    constraint_weight: 4.0
-    motion_model_type: 0
-
-    # 速度死区代价参数
-    velocity_deadband_weight: 1.0
-    velocity_deadband_vx: 0.05
-    velocity_deadband_vy: 0.05
-    velocity_deadband_wz: 0.1
-
-    # SG滤波器参数
-    use_sg_filter: false
-
-    # 运动模型参数
-    motion_model: "DiffDrive"
-    ackermann_min_turning_radius: 0.2
-
+    # ================== 偏好与约束 ==================
+    prefer_forward_weight: 5.0           # 偏好前进代价权重（惩罚负向速度）
+    prefer_forward_threshold: 0.5        # 距离目标大于此值时惩罚倒车
+    constraint_weight: 4.0               # 平滑性约束权重（惩罚角速度平方）
