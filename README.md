@@ -38,6 +38,16 @@ The provided ROS2 node (`mppi_ros2_node.cpp`) serves as a **reference implementa
 
 test as follows:
 
+
+https://github.com/user-attachments/assets/8b566993-2a48-4efa-a4a9-03f5e63c00cb
+
+
+
+https://github.com/user-attachments/assets/0047bd18-2107-427c-a768-84f9d137d4c3
+
+
+
+
 ### Key Capabilities
 
 - **Real-time Trajectory Optimization**: Optimizes control sequences at 20Hz (50ms control period)
@@ -572,3 +582,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Contact
 
 For questions or issues, please open an issue on the GitHub repository.
+
