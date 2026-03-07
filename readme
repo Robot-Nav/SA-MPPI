@@ -1,0 +1,25 @@
+xtensor: 21版本
+colcon build --packages-select mppi_laser_example
+
+# 终端1: Gazebo
+export TURTLEBOT3_MODEL=burger
+ros2 launch turtlebot3_gazebo empty_world.launch.py
+
+# 终端2: 静态TF
+ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 map odom
+
+# 终端3: MPPI
+cd ~/mppi_laser_example
+source install/setup.bash
+ros2 run mppi_laser_example mppi_ros2_node --ros-args --params-file /home/shaoyu/mppi_laser_example/config/mppi_params.yaml
+
+# 终端4: rviz2
+rviz2 -d ~/mppi_laser_example/config/mppi_test.rviz
+
+# 终端5: 动态路径发布器
+cd ~/mppi_laser_example
+source install/setup.bash
+ros2 run mppi_laser_example mppi_path_publisher.py --ros-args -p path_type:=three_side_rectangle
+straight
+three_side_rectangle
+
