@@ -541,41 +541,51 @@ $$C\_{\text{follow}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}
 
 参考点由 `furthest_reached_path_point + offset` 确定。支持跳过被障碍物阻挡的路径点。
 
-#### path\_align\_critic.hpp — 路径对齐代价
+#### path_align_critic.hpp — 路径对齐代价
 
 计算轨迹上每个点与路径最近点距离的平均值：
 
-$$C\_{\text{align}} = w \cdot \frac{1}{N} \sum\_{j=0}^{N-1} \left| \mathbf{p}_{\text{traj}}(j) - \mathbf{p}_{\text{path}}(\text{closest}(j)) \right|$$
+$$
+C_{\text{align}} = w \cdot \frac{1}{N} \sum_{j=0}^{N-1} \left| \mathbf{p}_{\text{traj}}(j) - \mathbf{p}_{\text{path}}(\text{closest}(j)) \right|
+$$
 
 关键特性：
 
 - **路径累计距离匹配**：使用 Nav2 风格的累计距离匹配，避免暴力搜索
 - **路径阻塞检测**：当路径被障碍物占据比例超过 `max_path_occupancy_ratio` 时，自动失效
-- **朝向考虑**：可选地将朝向偏差纳入距离计算：$d' = d \cdot (1 + 0.5 \cdot |\Delta\theta|)$
+- **朝向考虑**：可选地将朝向偏差纳入距离计算：
 
-#### path\_angle\_critic.hpp — 路径角度代价
+  $$
+  d' = d \cdot (1 + 0.5 \cdot |\Delta\theta|)
+  $$
+
+#### path_angle_critic.hpp — 路径角度代价
 
 惩罚轨迹终点与路径参考点之间的朝向偏差。三种模式：
 
-| 模式                                    | 值 | 说明                  |
-| ------------------------------------- | - | ------------------- |
-| `FORWARD_PREFERENCE`                  | 0 | 偏好前进方向，惩罚朝向与路径方向不一致 |
-| `NO_DIRECTIONAL_PREFERENCE`           | 1 | 允许倒车，仅惩罚朝向偏差大小      |
-| `CONSIDER_FEASIBLE_PATH_ORIENTATIONS` | 2 | 根据速度方向选择参考朝向        |
+| 模式 | 值 | 说明 |
+| --- | --- | --- |
+| `FORWARD_PREFERENCE` | 0 | 偏好前进方向，惩罚朝向与路径方向不一致 |
+| `NO_DIRECTIONAL_PREFERENCE` | 1 | 允许倒车，仅惩罚朝向偏差大小 |
+| `CONSIDER_FEASIBLE_PATH_ORIENTATIONS` | 2 | 根据速度方向选择参考朝向 |
 
-#### goal\_critic.hpp — 目标点代价
+#### goal_critic.hpp — 目标点代价
 
 接近目标时惩罚轨迹终点与目标点的距离平方：
 
-$$C\_{\text{goal}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}_{\text{goal}} \right|^2$$
+$$
+C_{\text{goal}} = w \cdot \left| \mathbf{p}_{\text{traj_end}} - \mathbf{p}_{\text{goal}} \right|^2
+$$
 
 仅在距离目标 < `goal_threshold` 时激活。
 
-#### goal\_angle\_critic.hpp — 目标朝向代价
+#### goal_angle_critic.hpp — 目标朝向代价
 
 接近目标时惩罚轨迹终点朝向与目标朝向的偏差平方：
 
-$$C\_{\text{goal\_angle}} = w \cdot (\theta\_{\text{traj\_end}} - \theta\_{\text{goal}})^2$$
+$$
+C_{\text{goal_angle}} = w \cdot (\theta_{\text{traj_end}} - \theta_{\text{goal}})^2
+$$
 
 仅在距离目标 < `goal_angle_threshold` 时激活。
 
