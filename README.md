@@ -10,6 +10,7 @@
 </p>
 
 > **声明**：本仓库是对 Navigation2 中 MPPI 局部规划器的解耦版本。由于个人技术能力有限，代码中存在一些"魔改"痕迹与不规范之处，部分实现逻辑可能与原版存在差异。如有不当之处，还望各位大佬多多指正，感谢包容！欢迎提 Issue 或 PR 一起完善。
+
 > **参考博客**：
 > 1、https://blog.csdn.net/qq_56908984/article/details/160439414
 > 2、https://blog.csdn.net/qq_56908984/article/details/160087544
