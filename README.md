@@ -798,6 +798,30 @@ rosrun mppi_laser_example mppi_path_publisher.py
 
 # 6. 可视化
 rviz -d src/mppi_laser_example/config/mppi_test.rviz
+
+或者按照该项目的流程：
+ROS1：MPPI
+1、
+source devel/setup.bash
+# 步骤1：加载YAML到参数服务器
+rosparam load $(rospack find mppi_laser_example)/config/mppi_params.yaml
+# 步骤2：启动节点（节点会自动读取参数）
+rosrun mppi_laser_example mppi_ros1_node
+
+2、发布路径
+rosrun mppi_laser_example mppi_path_publisher_fz.py _path_type:=three_side_rectangle _path_points:=300
+或
+rosrun mppi_laser_example JZJ_path.py _path_type:=arc_line
+或
+rosrun mppi_laser_example clean_path.py
+
+3、rosrun rviz rviz -d /home/shaoyu/MPPI_ws_ros1sim/src/mppi_laser_example/config/mppi_test.rviz
+
+4、（差速/全向）
+roslaunch pioneer_utils bizhang.launch
+
+静态TF变换或者启动SLAM节点
+rosrun tf static_transform_publisher 0 0 0 0 0 0 map odom 100
 ```
 
 ***
