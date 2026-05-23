@@ -574,7 +574,7 @@ $$
 接近目标时惩罚轨迹终点与目标点的距离平方：
 
 $$
-C_{\text{goal}} = w \cdot \left| \mathbf{p}_{\text{traj_end}} - \mathbf{p}_{\text{goal}} \right|^2
+C_{\text{goal}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}_{\text{goal}} \right|^2
 $$
 
 仅在距离目标 < `goal_threshold` 时激活。
@@ -584,7 +584,7 @@ $$
 接近目标时惩罚轨迹终点朝向与目标朝向的偏差平方：
 
 $$
-C_{\text{goal_angle}} = w \cdot (\theta_{\text{traj_end}} - \theta_{\text{goal}})^2
+C_{\text{goal\_angle}} = w \cdot (\theta_{\text{traj\_end}} - \theta_{\text{goal}})^2
 $$
 
 仅在距离目标 < `goal_angle_threshold` 时激活。
