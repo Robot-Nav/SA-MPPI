@@ -538,9 +538,7 @@ class CriticFunction {
 计算轨迹终点与路径参考点之间的距离平方：
 
 
-$$
-C_{\text{follow}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}_{\text{path\_ref}} \right|^2
-$$
+$$C_{\text{follow}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}_{\text{path\_ref}} \right|^2$$
 
 参考点由 `furthest_reached_path_point + offset` 确定。支持跳过被障碍物阻挡的路径点。
 
@@ -576,9 +574,7 @@ $$
 
 接近目标时惩罚轨迹终点与目标点的距离平方：
 
-$$
-C_{\text{goal}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}_{\text{goal}} \right|^2
-$$
+$$C_{\text{goal}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}_{\text{goal}} \right|^2$$
 
 仅在距离目标 < `goal_threshold` 时激活。
 
@@ -586,9 +582,7 @@ $$
 
 接近目标时惩罚轨迹终点朝向与目标朝向的偏差平方：
 
-$$
-C_{\text{goal\_angle}} = w \cdot (\theta_{\text{traj\_end}} - \theta_{\text{goal}})^2
-$$
+$$C_{\text{goal\_angle}} = w \cdot (\theta_{\text{traj\_end}} - \theta_{\text{goal}})^2$$
 
 仅在距离目标 < `goal_angle_threshold` 时激活。
 
