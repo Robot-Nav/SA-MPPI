@@ -537,7 +537,10 @@ class CriticFunction {
 
 计算轨迹终点与路径参考点之间的距离平方：
 
-$$C\_{\text{follow}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}_{\text{path\_ref}} \right|^2$$
+
+$$
+C_{\text{follow}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}_{\text{path\_ref}} \right|^2
+$$
 
 参考点由 `furthest_reached_path_point + offset` 确定。支持跳过被障碍物阻挡的路径点。
 
