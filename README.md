@@ -13,11 +13,11 @@
 
 > **参考博客**：
 
-> 1、[MPPI 局部路径规划控制器 —— 从 Nav2 解耦的模块化 ROS1 实现](https://blog.csdn.net/qq_56908984/article/details/160439414)
+> 1、[Shape-Aware MPPI（SA MPPI）算法：基于RC-ESDF的任意形状机器人实时轨迹优化](https://blog.csdn.net/qq_56908984/article/details/160439414)
 
-> 2、https://blog.csdn.net/qq_56908984/article/details/160087544
+> 2、[RC-ESDF 详解：以机器人为中心的欧几里得有符号距离场](https://blog.csdn.net/qq_56908984/article/details/160087544)
 
-> 3、https://blog.csdn.net/qq_56908984/article/details/158774722
+> 3、[MPPI_C++：Nav2-MPPI解耦版局部规划器（可魔改）](https://blog.csdn.net/qq_56908984/article/details/158774722)
 
 ## 目录
 
