@@ -13,7 +13,7 @@
 
 > **参考博客**：
 
-> 1、https://blog.csdn.net/qq_56908984/article/details/160439414
+> 1、[MPPI 局部路径规划控制器 —— 从 Nav2 解耦的模块化 ROS1 实现](https://blog.csdn.net/qq_56908984/article/details/160439414)
 
 > 2、https://blog.csdn.net/qq_56908984/article/details/160087544
 
