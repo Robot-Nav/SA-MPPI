@@ -1,4 +1,4 @@
-# MPPI 局部路径规划控制器 —— 从 Nav2 解耦的模块化 ROS1 实现
+# MPPI 局部路径规划控制器 —— 从 Nav2 解耦的模块化 ROS1 验证
 
 <p align="center">
   <a href="https://en.cppreference.com/"><img src="https://img.shields.io/badge/C++-17-blue.svg" alt="C++17"></a>
