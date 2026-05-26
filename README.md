@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://en.cppreference.com/"><img src="https://img.shields.io/badge/C++-17-blue.svg" alt="C++17"></a>
-  <a href="https://wiki.ros.org/"><img src="https://img.shields.io/badge/ROS-Noetic-green.svg" alt="ROS1"></a>
+  [![MPPI](https://img.shields.io/badge/Algorithm-MPPI-ff69b4.svg)](https://ieeexplore.ieee.org/document/7989202)
   <img src="https://img.shields.io/badge/Platform-Cross--Platform-orange.svg" alt="Cross Platform">
   <a href="https://github.com/xtensor-stack/xtensor"><img src="https://img.shields.io/badge/xtensor-0.21-purple.svg" alt="xtensor"></a>
   <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License">
@@ -12,11 +12,11 @@
 > **声明**：本仓库是对 Navigation2 中 MPPI 局部规划器的解耦版本。由于个人技术能力有限，代码中存在一些"魔改"痕迹与不规范之处，部分实现逻辑可能与原版存在差异，代码实时更新中。如有不当之处，还望各位大佬多多指正，感谢包容！欢迎提 Issue 或 PR 一起完善。
 
 > **参考博客**：
-
+>
 > 1、[Shape-Aware MPPI（SA MPPI）算法：基于RC-ESDF的任意形状机器人实时轨迹优化](https://blog.csdn.net/qq_56908984/article/details/160439414)
-
+>
 > 2、[RC-ESDF 详解：以机器人为中心的欧几里得有符号距离场](https://blog.csdn.net/qq_56908984/article/details/160087544)
-
+>
 > 3、[MPPI_C++：Nav2-MPPI解耦版局部规划器（可魔改）](https://blog.csdn.net/qq_56908984/article/details/158774722)
 >
 > 4、[SA-MPPI-cost-calculator在线交互网页](https://opti-mppi-cost-calculator.vercel.app/critic_cost_calculator.html)
