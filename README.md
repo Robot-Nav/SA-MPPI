@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://en.cppreference.com/"><img src="https://img.shields.io/badge/C++-17-blue.svg" alt="C++17"></a>
-  [![MPPI](https://img.shields.io/badge/MPPI-Nav2-ff69b4.svg)](https://docs.nav2.org/configuration/packages/configuring-mppic.html)
+  <a href="https://docs.nav2.org/configuration/packages/configuring-mppic.html"><img src="https://img.shields.io/badge/MPPI-Nav2-ff69b4.svg" alt="MPPI"></a>
   <img src="https://img.shields.io/badge/Platform-Cross--Platform-orange.svg" alt="Cross Platform">
   <a href="https://github.com/xtensor-stack/xtensor"><img src="https://img.shields.io/badge/xtensor-0.21-purple.svg" alt="xtensor"></a>
   <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License">
