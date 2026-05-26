@@ -18,6 +18,8 @@
 > 2、[RC-ESDF 详解：以机器人为中心的欧几里得有符号距离场](https://blog.csdn.net/qq_56908984/article/details/160087544)
 
 > 3、[MPPI_C++：Nav2-MPPI解耦版局部规划器（可魔改）](https://blog.csdn.net/qq_56908984/article/details/158774722)
+>
+> 4、[SA-MPPI-cost-calculator在线交互网页](https://opti-mppi-cost-calculator.vercel.app/critic_cost_calculator.html)
 
 ## 目录
 
