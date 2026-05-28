@@ -61,15 +61,13 @@
 - **多种运动模型**：支持差速驱动、全向移动和阿克曼转向模型
 - **全向/差速自动切换**：根据障碍物距离和路径偏离自动切换运动模型
 
-### 1.3 效果演示
+### 1.3 基础效果演示
 
-<video src="https://github.com/user-attachments/assets/8b566993-2a48-4efa-a4a9-03f5e63c00cb" controls width="100%"></video>
 
-*矩形路径绕行演示*
 
-<video src="https://github.com/user-attachments/assets/0047bd18-2107-427c-a768-84f9d137d4c3" controls width="100%"></video>
+https://github.com/user-attachments/assets/575febab-0bb6-4e82-a43d-874637169713
 
-*直线避障演示*
+
 
 ***
 
