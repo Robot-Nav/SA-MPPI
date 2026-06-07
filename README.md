@@ -283,7 +283,7 @@ $$T = \text{clamp}\left(T\_{\text{base}} \cdot \left(1 + \frac{\ln(S\_{\max} - S
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │              mppi_ros1_node.cpp                          │   │
 │  │  订阅: /plan, /odom, /scan  |  发布: /cmd_vel, 调试轨迹  │   │
-│  │  参数加载 | 启动辅助 | 坐标变换 | 异常处理               │   │
+│  │  参数加载 | 坐标变换 | 异常处理               │   │
 │  └──────────────────────┬───────────────────────────────────┘   │
 └─────────────────────────┼───────────────────────────────────────┘
                           │
@@ -815,14 +815,15 @@ rviz -d src/mppi_laser_example/config/mppi_test.rviz
 | `time_steps`               | 40    | 预测时间步数，预测时长 = time\_steps × model\_dt |
 | `model_dt`                 | 0.05  | 时间步长（秒），控制轨迹预测的时间精度                   |
 | `temperature`              | 0.2   | Softmax 温度，控制权重分布的尖锐程度                |
-| `adaptive_temperature`     | True  | 是否启用自适应温度                             |
+| `adaptive_temperature`     | False | 是否启用自适应温度                             |
 | `adaptive_temperature_min` | 0.1   | 自适应温度下限                               |
 | `adaptive_temperature_max` | 1.0   | 自适应温度上限                               |
 | `gamma`                    | 0.015 | 控制代价权重，平衡平滑性和轨迹质量                     |
 | `iteration_count`          | 1     | 每周期优化迭代次数                             |
 | `control_period_ms`        | 50    | 控制周期（毫秒），50ms = 20Hz                  |
 | `thread_count`             | 4     | 并行计算线程数                               |
-| `prune_distance`           | 3.5   | 路径裁剪距离（米）                             |
+| `prune_distance`           | 2.0   | 路径裁剪距离（米）                             |
+| `goal_tolerance`           | 0.30  | 目标到达容差（米），距目标小于此值时停止运动              |
 
 ### 8.2 控制约束
 
@@ -848,8 +849,8 @@ rviz -d src/mppi_laser_example/config/mppi_test.rviz
 
 | 参数                            | 默认值      | 描述            |
 | ----------------------------- | -------- | ------------- |
-| `obstacle_repulsion_weight`   | 1.0      | 障碍物排斥权重       |
-| `obstacle_collision_cost`     | 100000.0 | 碰撞轨迹代价        |
+| `obstacle_repulsion_weight`   | 0.0      | 障碍物排斥权重       |
+| `obstacle_collision_cost`     | 0.0      | 碰撞轨迹代价        |
 | `obstacle_collision_margin`   | 0.3      | 碰撞边界距离（m）     |
 | `collision_cost_threshold`    | 50000.0  | 碰撞代价阈值        |
 | `obstacle_inflation_radius`   | 0.8      | 障碍物膨胀半径（m）    |
@@ -872,40 +873,40 @@ rviz -d src/mppi_laser_example/config/mppi_test.rviz
 
 | 参数                                 | 默认值   | 描述            |
 | ---------------------------------- | ----- | ------------- |
-| `path_align_weight`                | 15.0  | 路径对齐权重        |
-| `path_align_offset`                | 4     | 从最远路径点向前偏移的步数 |
-| `path_align_threshold`             | 0.3   | 距离阈值（m）       |
-| `path_align_traj_step`             | 1     | 轨迹点采样步长       |
+| `path_align_weight`                | 10.0  | 路径对齐权重        |
+| `path_align_offset`                | 20    | 从最远路径点向前偏移的步数 |
+| `path_align_threshold`             | 0.5   | 距离阈值（m）       |
+| `path_align_traj_step`             | 4     | 轨迹点采样步长       |
 | `path_align_obstacle_check_radius` | 0.15  | 路径对齐障碍物检查半径   |
-| `path_align_max_occupancy_ratio`   | 0.45  | 路径阻塞比例阈值      |
+| `path_align_max_occupancy_ratio`   | 0.90  | 路径阻塞比例阈值      |
 | `path_align_use_orientations`      | false | 是否考虑路径朝向      |
 
 ### 8.7 路径角度代价参数
 
 | 参数                     | 默认值  | 描述                         |
 | ---------------------- | ---- | -------------------------- |
-| `path_angle_weight`    | 5.0  | 路径角度权重                     |
+| `path_angle_weight`    | 2.2  | 路径角度权重                     |
 | `path_angle_offset`    | 4    | 从最远路径点向前偏移的步数              |
-| `path_angle_threshold` | 0.3  | 距离阈值（m）                    |
-| `path_angle_max`       | 0.15 | 最大允许角度偏差（rad）              |
+| `path_angle_threshold` | 0.5  | 距离阈值（m）                    |
+| `path_angle_max`       | 0.785 | 最大允许角度偏差（rad）              |
 | `path_angle_mode`      | 0    | 角度模式：0=偏好前进，1=无偏好，2=考虑路径朝向 |
 
 ### 8.8 路径跟随代价参数
 
 | 参数                      | 默认值 | 描述            |
 | ----------------------- | --- | ------------- |
-| `path_follow_weight`    | 8.0 | 路径跟随权重        |
-| `path_follow_offset`    | 4   | 从最远路径点向前偏移的步数 |
-| `path_follow_threshold` | 0.4 | 距离阈值（m）       |
+| `path_follow_weight`    | 5.0 | 路径跟随权重        |
+| `path_follow_offset`    | 6   | 从最远路径点向前偏移的步数 |
+| `path_follow_threshold` | 1.4 | 距离阈值（m）       |
 
 ### 8.9 目标点代价参数
 
 | 参数                     | 默认值 | 描述            |
 | ---------------------- | --- | ------------- |
 | `goal_weight`          | 5.0 | 目标点权重         |
-| `goal_threshold`       | 0.8 | 激活目标点代价的距离阈值  |
+| `goal_threshold`       | 1.4 | 激活目标点代价的距离阈值  |
 | `goal_angle_weight`    | 3.0 | 目标角度权重        |
-| `goal_angle_threshold` | 0.6 | 激活目标角度代价的距离阈值 |
+| `goal_angle_threshold` | 0.5 | 激活目标角度代价的距离阈值 |
 
 ### 8.10 其他代价参数
 
@@ -914,6 +915,10 @@ rviz -d src/mppi_laser_example/config/mppi_test.rviz
 | `prefer_forward_weight`    | 3.0  | 偏好前进权重                 |
 | `prefer_forward_threshold` | 0.5  | 距离阈值                   |
 | `constraint_weight`        | 3.0  | 约束代价权重                 |
+| `constraint_vx_max`       | 1.2  | ConstraintCritic 使用的最大线速度  |
+| `constraint_vx_min`       | -0.25 | ConstraintCritic 使用的最小线速度 |
+| `constraint_vy_max`       | 1.2  | ConstraintCritic 使用的最大横向速度 |
+| `constraint_wz_max`       | 2.0  | ConstraintCritic 使用的最大角速度  |
 | `motion_model_type`        | 0    | 运动模型类型：0=差速，1=全向，2=阿克曼 |
 | `velocity_deadband_weight` | 35.0 | 速度死区权重                 |
 | `velocity_deadband_vx`     | 0.05 | 线速度死区阈值                |
@@ -959,9 +964,9 @@ robot_radius: 0.35                 # 根据实际机器人尺寸调整
 | `esdf_weight` | 5.0 | ESDF 软惩罚区代价值权重 |
 | `esdf_collision_cost` | 100000.0 | 碰撞代价（障碍物进入轮廓内部） |
 | `esdf_d_hard` | 0.0 | 硬碰撞距离阈值（米），dist < d_hard 视为碰撞 |
-| `esdf_d_margin` | 0.3 | 软惩罚边界距离（米），d_hard ≤ dist < d_margin 为软惩罚区 |
+| `esdf_d_margin` | 0.5 | 软惩罚边界距离（米），d_hard ≤ dist < d_margin 为软惩罚区 |
 | `esdf_cost_scaling` | 5.0 | 代价指数衰减速度 |
-| `esdf_near_goal_distance` | 0.3 | 接近目标时关闭 ESDF 的距离阈值 |
+| `esdf_near_goal_distance` | 0.5 | 接近目标时关闭 ESDF 的距离阈值 |
 | `esdf_width` | 10.0 | ESDF 地图物理宽度（米） |
 | `esdf_height` | 10.0 | ESDF 地图物理高度（米） |
 | `esdf_resolution` | 0.05 | ESDF 地图分辨率（米/像素） |
