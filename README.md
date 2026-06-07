@@ -2,14 +2,24 @@
 
 <p align="center">
   <a href="https://en.cppreference.com/"><img src="https://img.shields.io/badge/C++-17-blue.svg" alt="C++17"></a>
-  <a href="https://wiki.ros.org/"><img src="https://img.shields.io/badge/ROS-Noetic-green.svg" alt="ROS1"></a>
+  <a href="https://docs.nav2.org/configuration/packages/configuring-mppic.html"><img src="https://img.shields.io/badge/MPPI-Nav2-ff69b4.svg" alt="MPPI"></a>
   <img src="https://img.shields.io/badge/Platform-Cross--Platform-orange.svg" alt="Cross Platform">
   <a href="https://github.com/xtensor-stack/xtensor"><img src="https://img.shields.io/badge/xtensor-0.21-purple.svg" alt="xtensor"></a>
-  <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License">
+  <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License">
   <img src="https://img.shields.io/badge/Status-Active-brightgreen.svg" alt="Status">
 </p>
 
-> **声明**：本仓库是对 Navigation2 中 MPPI 局部规划器的解耦版本。由于个人技术能力有限，代码中存在一些"魔改"痕迹与不规范之处，部分实现逻辑可能与原版存在差异，**算法持续更新中**。如有不当之处，还望各位大佬多多指正，感谢包容！欢迎提 Issue 或 PR 一起完善。
+> **声明**：本仓库是对 Navigation2 中 MPPI 局部规划器的解耦版本。由于个人技术能力有限，代码中存在一些"魔改"痕迹与不规范之处，部分实现逻辑可能与原版存在差异，**代码实时更新中**。如有不当之处，还望各位大佬多多指正，感谢包容！欢迎提 Issue 或 PR 一起完善。
+
+> **参考博客**：
+>
+> 1、[Shape-Aware MPPI（SA MPPI）算法：基于RC-ESDF的任意形状机器人实时轨迹优化](https://blog.csdn.net/qq_56908984/article/details/160439414)
+>
+> 2、[RC-ESDF 详解：以机器人为中心的欧几里得有符号距离场](https://blog.csdn.net/qq_56908984/article/details/160087544)
+>
+> 3、[MPPI_C++：Nav2-MPPI解耦版局部规划器（可魔改）](https://blog.csdn.net/qq_56908984/article/details/158774722)
+>
+> 4、[SA-MPPI-cost-calculator在线交互网页](https://opti-mppi-cost-calculator.vercel.app/critic_cost_calculator.html)
 
 ## 目录
 
@@ -47,18 +57,17 @@
 - **激光避障**：使用基于 BFS 的局部栅格距离场进行高效碰撞检测
 - **多线程采样**：使用可配置线程池进行并行轨迹生成
 - **动态障碍物支持**：对移动障碍物的预测性碰撞避免，可扩展
+- **阻塞检测**：当被障碍物阻挡时防止原地旋转行为
 - **多种运动模型**：支持差速驱动、全向移动和阿克曼转向模型
-- **ESDF 形状感知避障**：基于 RC-ESDF 支持任意多边形 footprint 精确碰撞检测与解析梯度引导
+- **全向/差速自动切换**：根据障碍物距离和路径偏离自动切换运动模型
 
-### 1.3 效果演示
+### 1.3 基础效果演示
 
-<video src="https://github.com/user-attachments/assets/8b566993-2a48-4efa-a4a9-03f5e63c00cb" controls width="100%"></video>
 
-*矩形路径绕行 + 狭窄通道通行演示*
 
-<video src="https://github.com/user-attachments/assets/0047bd18-2107-427c-a768-84f9d137d4c3" controls width="100%"></video>
+https://github.com/user-attachments/assets/575febab-0bb6-4e82-a43d-874637169713
 
-*直线高速巡航 + 动态避障演示*
+
 
 ***
 
@@ -75,9 +84,11 @@
 | **SG 滤波**   | Savitzky-Golay 滤波器实现平滑控制序列    |
 | **足迹支持**    | 非圆形机器人碰撞检测（多边形足迹）             |
 | **动态障碍物**   | 基于速度的线性预测碰撞避免                 |
+| **阻塞检测**    | 检测原地打转并输出零速度                  |
+| **全向/差速切换** | 根据环境自动切换运动模型                  |
 | **路径阻塞检测**  | 路径被大量障碍物占据时自动失效对齐代价           |
 | **路径点有效性**  | 跳过被障碍物阻挡的路径点                  |
-| **ESDF 形状感知** | RC-ESDF 任意多边形 footprint 精确碰撞检测 + 梯度引导 |
+| **启动辅助**    | 解决零速度启动困境 / 无用，可删除            |
 
 ### 2.2 代价函数组件
 
@@ -93,7 +104,6 @@
 | `ConstraintCritic`       | 运动学约束执行（差速/全向/阿克曼）          | 始终      |
 | `TwirlingCritic`         | 抑制原地旋转行为                    | 远离目标时   |
 | `VelocityDeadbandCritic` | 低速稳定性改进                     | 始终      |
-| `EsdfCritic`             | 基于 RC-ESDF 的形状感知避障（任意多边形 footprint + 解析梯度引导） | 启用时替代 ObstaclesCritic |
 
 ### 2.3 跨平台可移植性
 
@@ -109,11 +119,7 @@
 
 - C++17 编译器
 - [xtensor 0.21版本](https://github.com/xtensor-stack/xtensor)（头文件-only 数值库）
-- [Eigen3](https://eigen.tuxfamily.org/)（线性代数库，RC-ESDF 依赖）
-- [RC-ESDF](https://github.com/HKAS-X/RC-ESDF)（Robo-Centric ESDF 库，EsdfCritic 依赖）
 - 仅标准 C++ 库
-
-> **注意**：MPPI 项目编译时不再需要 OpenCV 依赖。如需启用 RC-ESDF 可视化，cmake 时加 `-DRC_ESDF_VISUALIZE=ON`。
 
 ***
 
@@ -251,7 +257,20 @@ $$v\_{t+1} = v\_t + \text{clamp}(v\_{\text{desired}} - v\_t, -a\_{\max} \Delta t
 
 该约束在运动模型的 `predict()` 方法中实现，确保生成的轨迹满足物理加速度限制。
 
-### 3.5 Savitzky-Golay 滤波
+### 3.5 阻塞检测
+
+控制器使用旋转比率检测阻塞情况：
+
+$$\text{ratio} = \frac{|\omega\_z|}{|v\_x| + \epsilon}$$
+
+如果 $\text{ratio} > \theta\_{\text{threshold}}$ 持续 $N$ 帧，则认为机器人被阻塞并命令零速度。
+
+阻塞检测分为两层：
+
+1. **TwirlingCritic**：通过代价函数惩罚"低前进+高旋转"行为，属于软约束
+2. **Optimizer::isBlocked()**：通过检测控制序列的平均 wz/vx 比率，连续多帧超过阈值时输出零速度，属于硬约束
+
+### 3.6 Savitzky-Golay 滤波
 
 控制序列平滑使用 SG 滤波系数：
 
@@ -261,7 +280,7 @@ $$\nu\_t^{\text{filtered}} = \sum\_{k=-2}^{2} c\_{k+2} \cdot \nu\_{t+k}$$
 
 边界处理：当索引超出控制序列范围时，使用控制历史（前几帧的实际控制量）进行填充。
 
-### 3.6 自适应温度
+### 3.7 自适应温度
 
 当启用自适应温度时，温度参数根据代价分布动态调整：
 
@@ -283,7 +302,7 @@ $$T = \text{clamp}\left(T\_{\text{base}} \cdot \left(1 + \frac{\ln(S\_{\max} - S
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │              mppi_ros1_node.cpp                          │   │
 │  │  订阅: /plan, /odom, /scan  |  发布: /cmd_vel, 调试轨迹  │   │
-│  │  参数加载 | 坐标变换 | 异常处理               │   │
+│  │  参数加载 | 启动辅助 | 坐标变换 | 异常处理               │   │
 │  └──────────────────────┬───────────────────────────────────┘   │
 └─────────────────────────┼───────────────────────────────────────┘
                           │
@@ -291,7 +310,8 @@ $$T = \text{clamp}\left(T\_{\text{base}} \cdot \left(1 + \frac{\ln(S\_{\max} - S
 │                     控制器接口层                                  │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │              MPPIController (controller.hpp)              │   │
-│  │  初始化 | 代价参数设置 | 障碍物更新 | 路径点有效性       │   │
+│  │  初始化 | 代价参数设置 | 障碍物更新 | 运动模型切换       │   │
+│  │  路径点有效性 | 全向/差速自动切换                         │   │
 │  └──────────┬──────────────────────────┬────────────────────┘   │
 └─────────────┼──────────────────────────┼────────────────────────┘
               │                          │
@@ -301,16 +321,15 @@ $$T = \text{clamp}\left(T\_{\text{base}} \cdot \left(1 + \frac{\ln(S\_{\max} - S
 │  │  Optimizer       │  │  │  │     CriticManager           │    │
 │  │  采样 | 评分     │  │  │  │  ┌───────────────────────┐  │    │
 │  │  加权更新 | 滤波 │  │  │  │  │ ObstaclesCritic       │  │    │
-│  │  路径裁剪       │  │  │  │  │ PathFollowCritic      │  │    │
-│  └───────┬──────────┘  │  │  │  │ PathAlignCritic       │  │    │
-│          │              │  │  │  │ PathAngleCritic       │  │    │
+│  │  阻塞检测       │  │  │  │  │ PathFollowCritic      │  │    │
+│  │  路径裁剪       │  │  │  │  │ PathAlignCritic       │  │    │
+│  └───────┬──────────┘  │  │  │  │ PathAngleCritic       │  │    │
 │          │              │  │  │  │ GoalCritic            │  │    │
 │  ┌───────▼──────────┐  │  │  │  │ GoalAngleCritic       │  │    │
 │  │  NoiseGenerator  │  │  │  │  │ PreferForwardCritic   │  │    │
 │  │  异步噪声线程    │  │  │  │  │ ConstraintCritic      │  │    │
 │  └──────────────────┘  │  │  │  │ TwirlingCritic        │  │    │
 │  ┌──────────────────┐  │  │  │  │ VelocityDeadbandCrit  │  │    │
-│  ┌──────────────────┐  │  │  │  │ EsdfCritic (RC-ESDF)  │  │    │
 │  │  MotionModel     │  │  │  │  └───────────────────────┘  │    │
 │  │  Diff | Omni     │  │  │  └─────────────────────────────┘    │
 │  │  Ackermann       │  │  │                                      │
@@ -368,8 +387,7 @@ mppi_laser_example/
 │   │   ├── prefer_forward_critic.hpp # 偏好前进代价
 │   │   ├── constraint_critic.hpp   # 运动学约束代价
 │   │   ├── twirling_critic.hpp     # 原地打转惩罚代价
-│   │   ├── velocity_deadband_critic.hpp # 速度死区代价
-│   │   └── esdf_critic.hpp         # RC-ESDF 形状感知避障代价
+│   │   └── velocity_deadband_critic.hpp # 速度死区代价
 │   └── tools/
 │       ├── math_utils.hpp          # 数学工具：角度规范化、clamp
 │       └── noise_generator.hpp     # 异步高斯噪声生成器
@@ -519,45 +537,57 @@ class CriticFunction {
 
 计算轨迹终点与路径参考点之间的距离平方：
 
-$$C\_{\text{follow}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}_{\text{path\_ref}} \right|^2$$
+$$
+C_{\mathrm{follow}} = w \cdot \left\| \mathbf{p}_{\mathrm{traj\_end}} - \mathbf{p}_{\mathrm{path\_ref}} \right\|^2
+$$
 
 参考点由 `furthest_reached_path_point + offset` 确定。支持跳过被障碍物阻挡的路径点。
 
-#### path\_align\_critic.hpp — 路径对齐代价
+#### path_align_critic.hpp — 路径对齐代价
 
 计算轨迹上每个点与路径最近点距离的平均值：
 
-$$C\_{\text{align}} = w \cdot \frac{1}{N} \sum\_{j=0}^{N-1} \left| \mathbf{p}_{\text{traj}}(j) - \mathbf{p}_{\text{path}}(\text{closest}(j)) \right|$$
+$$
+C_{\text{align}} = w \cdot \frac{1}{N} \sum_{j=0}^{N-1} \left| \mathbf{p}_{\text{traj}}(j) - \mathbf{p}_{\text{path}}(\text{closest}(j)) \right|
+$$
 
 关键特性：
 
 - **路径累计距离匹配**：使用 Nav2 风格的累计距离匹配，避免暴力搜索
 - **路径阻塞检测**：当路径被障碍物占据比例超过 `max_path_occupancy_ratio` 时，自动失效
-- **朝向考虑**：可选地将朝向偏差纳入距离计算：$d' = d \cdot (1 + 0.5 \cdot |\Delta\theta|)$
+- **朝向考虑**：可选地将朝向偏差纳入距离计算：
 
-#### path\_angle\_critic.hpp — 路径角度代价
+  $$
+  d' = d \cdot (1 + 0.5 \cdot |\Delta\theta|)
+  $$
+
+#### path_angle_critic.hpp — 路径角度代价
 
 惩罚轨迹终点与路径参考点之间的朝向偏差。三种模式：
 
-| 模式                                    | 值 | 说明                  |
-| ------------------------------------- | - | ------------------- |
-| `FORWARD_PREFERENCE`                  | 0 | 偏好前进方向，惩罚朝向与路径方向不一致 |
-| `NO_DIRECTIONAL_PREFERENCE`           | 1 | 允许倒车，仅惩罚朝向偏差大小      |
-| `CONSIDER_FEASIBLE_PATH_ORIENTATIONS` | 2 | 根据速度方向选择参考朝向        |
+| 模式 | 值 | 说明 |
+| --- | --- | --- |
+| `FORWARD_PREFERENCE` | 0 | 偏好前进方向，惩罚朝向与路径方向不一致 |
+| `NO_DIRECTIONAL_PREFERENCE` | 1 | 允许倒车，仅惩罚朝向偏差大小 |
+| `CONSIDER_FEASIBLE_PATH_ORIENTATIONS` | 2 | 根据速度方向选择参考朝向 |
 
-#### goal\_critic.hpp — 目标点代价
+#### goal_critic.hpp — 目标点代价
 
 接近目标时惩罚轨迹终点与目标点的距离平方：
 
-$$C\_{\text{goal}} = w \cdot \left| \mathbf{p}_{\text{traj\_end}} - \mathbf{p}_{\text{goal}} \right|^2$$
+$$
+C_{\mathrm{goal}} = w \cdot \left\| \mathbf{p}_{\mathrm{traj\_end}} - \mathbf{p}_{\mathrm{goal}} \right\|^2
+$$
 
 仅在距离目标 < `goal_threshold` 时激活。
 
-#### goal\_angle\_critic.hpp — 目标朝向代价
+#### goal_angle_critic.hpp — 目标朝向代价
 
 接近目标时惩罚轨迹终点朝向与目标朝向的偏差平方：
 
-$$C\_{\text{goal\_angle}} = w \cdot (\theta\_{\text{traj\_end}} - \theta\_{\text{goal}})^2$$
+$$
+C_{\mathrm{goal\_angle}} = w \cdot (\theta_{\mathrm{traj\_end}} - \theta_{\mathrm{goal}})^2
+$$
 
 仅在距离目标 < `goal_angle_threshold` 时激活。
 
@@ -590,29 +620,6 @@ $$C\_{\text{twirl}} = w \cdot \sum\_{t} \max(0, |w\_z(t)| - |v\_x(t)|)$$
 惩罚速度低于死区阈值的情况，避免低速不稳定：
 
 $$C\_{\text{deadband}} = w \cdot \sum\_{t} \left\[\mathbb{1}(|v\_x| < \epsilon\_{vx}) + \mathbb{1}(|v\_y| < \epsilon\_{vy}) + \mathbb{1}(|w\_z| < \epsilon\_{wz})\right]$$
-
-#### esdf\_critic.hpp — RC-ESDF 形状感知避障代价
-
-基于 RC-ESDF (Robo-Centric ESDF) 的任意多边形 footprint 精确碰撞检测，是 ObstaclesCritic 的增强替代方案。核心流程：
-
-1. **离线 ESDF 构建**：根据机器人多边形轮廓在 Body Frame 下预计算符号距离场（延迟构建模式，`setFootprint()` + `setParams()` 后自动触发）
-2. **BFS 预过滤**：以机器人为中心构建 6m×6m BFS 距离栅格，远障碍物轨迹点 O(1) 跳过
-3. **世界→Body Frame 变换**：将障碍物点从世界坐标系旋转到机器人本体坐标系
-4. **ESDF O(1) 查询**：通过双线性插值获取精确距离和解析梯度
-5. **越界回退**：ESDF 查询越界时回退到圆形距离估计（`dist = ||p_body|| - robot_radius`）
-6. **三段式代价**：硬碰撞（极高代价 + 终止）→ 软惩罚（指数衰减 + 梯度调制）→ 安全区（无代价）
-7. **梯度引导**：利用解析梯度与速度方向的点积调制软惩罚（远离降低、靠近加重）
-8. **动态障碍物**：支持动态障碍物的 ESDF 查询（含半径扣减）
-9. **体素降采样**：障碍物点云按体素栅格降采样，减少查询数量
-
-与传统 ObstaclesCritic 的关键区别：
-
-| 维度 | ObstaclesCritic | EsdfCritic |
-|---|---|---|
-| 机器人模型 | 圆形 或 顶点枚举 | 任意多边形精确 SDF |
-| 碰撞检测 | 顶点→栅格距离查询 | 障碍物→Body Frame SDF 查询 |
-| 梯度信息 | 无 | 解析梯度可用 |
-| 精度 | 顶点间可能漏检 | 双线性插值，连续精确 |
 
 ### 5.4 核心算法层
 
@@ -651,6 +658,7 @@ evalControl()
   │   ├── evalTrajectoriesScores()      # 各 Critic 评分
   │   ├── updateControlSequence()       # Softmax 加权更新
   │   └── fallback()                    # 碰撞恢复
+  ├── isBlocked()                  # 阻塞检测
   ├── savitskyGolayFilter()        # SG 滤波
   └── getControlFromSequence()     # 取第一个控制量
 ```
@@ -660,8 +668,9 @@ evalControl()
 `MPPIController` 类封装优化器和代价函数管理器，提供：
 
 - `initialize()`：初始化控制器，创建所有 Critic
-- `updateStaticObstacles()`：更新障碍物 + 路径有效性
+- `updateStaticObstacles()`：更新障碍物 + 路径有效性 + 运动模型切换
 - `computeVelocityCommands()`：主循环调用入口
+- 全向/差速自动切换逻辑
 
 ### 5.5 ROS1 集成层
 
@@ -673,9 +682,10 @@ evalControl()
 - **发布话题**：`cmd_vel`（速度指令）、`debug_optimal_trajectory`（调试轨迹）
 - **控制循环**：50ms 定时器（20Hz）
 - **参数加载**：从 ROS 参数服务器读取所有 MPPI 参数
+- **启动辅助**：`tryApplyStartupAssist()` — 解决零速度启动困境
 - **坐标变换**：将激光点从机器人坐标系转换到全局坐标系
 - **异常处理**：MPPI 计算失败时输出零速度并重置控制器
-- **到达判断**：距目标点 < goal_tolerance 时停止
+- **到达判断**：距目标点 < 0.20m 时停止
 
 ***
 
@@ -685,9 +695,7 @@ evalControl()
 
 - ROS1 Melodic/Noetic
 - C++17 兼容编译器（GCC ≥ 7）
-- Eigen3 库（`sudo apt install libeigen3-dev`）
-- xtensor、xsimd、xtl 库（头文件-only，已内嵌）
-- RC-ESDF 库（位于工作空间根目录 `RC-ESDF/`）
+- xtensor、xsimd、xtl 库
 
 ### 6.2 下载第三方库(仓库的无效就重新下载)
 
@@ -719,23 +727,14 @@ cd ../..
 
 ```bash
 # 1. 进入工作空间
-cd ~/MPPI_ws
+cd ~/MPPI_ws_ros1sim
 
-# 2. 确保 RC-ESDF 库在工作空间根目录
-#    如果尚未克隆：
-#    git clone https://github.com/HKAS-X/RC-ESDF.git
-
-# 3. 编译（默认不依赖 OpenCV）
+# 2. 编译
 catkin_make
 
-# 3b. 如需启用 RC-ESDF 可视化功能（需要 OpenCV）：
-# catkin_make -DRC_ESDF_VISUALIZE=ON
-
-# 4. source 工作空间
+# 3. source 工作空间
 source devel/setup.bash
 ```
-
-> **注意**：MPPI 项目编译时不再需要 OpenCV 依赖。如需启用 RC-ESDF 可视化，cmake 时加 `-DRC_ESDF_VISUALIZE=ON`。
 
 ### 6.4 依赖说明
 
@@ -799,6 +798,30 @@ rosrun mppi_laser_example mppi_path_publisher.py
 
 # 6. 可视化
 rviz -d src/mppi_laser_example/config/mppi_test.rviz
+
+或者按照该项目的流程：
+ROS1：MPPI
+1、
+source devel/setup.bash
+# 步骤1：加载YAML到参数服务器
+rosparam load $(rospack find mppi_laser_example)/config/mppi_params.yaml
+# 步骤2：启动节点（节点会自动读取参数）
+rosrun mppi_laser_example mppi_ros1_node
+
+2、发布路径
+rosrun mppi_laser_example mppi_path_publisher_fz.py _path_type:=three_side_rectangle _path_points:=300
+或
+rosrun mppi_laser_example JZJ_path.py _path_type:=arc_line
+或
+rosrun mppi_laser_example clean_path.py
+
+3、rosrun rviz rviz -d /home/shaoyu/MPPI_ws_ros1sim/src/mppi_laser_example/config/mppi_test.rviz
+
+4、（差速/全向）
+roslaunch pioneer_utils bizhang.launch
+
+静态TF变换或者启动SLAM节点
+rosrun tf static_transform_publisher 0 0 0 0 0 0 map odom 100
 ```
 
 ***
@@ -815,15 +838,14 @@ rviz -d src/mppi_laser_example/config/mppi_test.rviz
 | `time_steps`               | 40    | 预测时间步数，预测时长 = time\_steps × model\_dt |
 | `model_dt`                 | 0.05  | 时间步长（秒），控制轨迹预测的时间精度                   |
 | `temperature`              | 0.2   | Softmax 温度，控制权重分布的尖锐程度                |
-| `adaptive_temperature`     | False | 是否启用自适应温度                             |
+| `adaptive_temperature`     | True  | 是否启用自适应温度                             |
 | `adaptive_temperature_min` | 0.1   | 自适应温度下限                               |
 | `adaptive_temperature_max` | 1.0   | 自适应温度上限                               |
 | `gamma`                    | 0.015 | 控制代价权重，平衡平滑性和轨迹质量                     |
 | `iteration_count`          | 1     | 每周期优化迭代次数                             |
 | `control_period_ms`        | 50    | 控制周期（毫秒），50ms = 20Hz                  |
 | `thread_count`             | 4     | 并行计算线程数                               |
-| `prune_distance`           | 2.0   | 路径裁剪距离（米）                             |
-| `goal_tolerance`           | 0.30  | 目标到达容差（米），距目标小于此值时停止运动              |
+| `prune_distance`           | 3.5   | 路径裁剪距离（米）                             |
 
 ### 8.2 控制约束
 
@@ -849,8 +871,8 @@ rviz -d src/mppi_laser_example/config/mppi_test.rviz
 
 | 参数                            | 默认值      | 描述            |
 | ----------------------------- | -------- | ------------- |
-| `obstacle_repulsion_weight`   | 0.0      | 障碍物排斥权重       |
-| `obstacle_collision_cost`     | 0.0      | 碰撞轨迹代价        |
+| `obstacle_repulsion_weight`   | 1.0      | 障碍物排斥权重       |
+| `obstacle_collision_cost`     | 100000.0 | 碰撞轨迹代价        |
 | `obstacle_collision_margin`   | 0.3      | 碰撞边界距离（m）     |
 | `collision_cost_threshold`    | 50000.0  | 碰撞代价阈值        |
 | `obstacle_inflation_radius`   | 0.8      | 障碍物膨胀半径（m）    |
@@ -862,86 +884,107 @@ rviz -d src/mppi_laser_example/config/mppi_test.rviz
 | `grid_width`                  | 100      | 栅格地图宽度        |
 | `grid_height`                 | 100      | 栅格地图高度        |
 
-### 8.5 旋转惩罚参数
+### 8.5 阻塞检测参数
 
 | 参数                         | 默认值 | 描述                        |
 | -------------------------- | --- | ------------------------- |
-| `twirling_weight`          | 10.0 | 旋转惩罚权重               |
+| `twirling_weight`          | 0.5 | 旋转惩罚权重（软约束）               |
 | `twirling_threshold`       | 0.5 | 关闭 TwirlingCritic 的目标距离阈值 |
+| `spinning_ratio_threshold` | 8.0 | wz/vx 比率阈值（硬约束）           |
+| `spinning_detect_frames`   | 8   | 连续检测帧数                    |
 
-### 8.6 路径对齐代价参数
+### 8.6 启动辅助参数
+
+| 参数                       | 默认值   | 描述          |
+| ------------------------ | ----- | ----------- |
+| `startup_assist_enabled` | false | 是否启用启动辅助    |
+| `startup_boost_vx`       | 0.06  | 启动时的线速度增强值  |
+| `startup_boost_wz_gain`  | 1.2   | 启动时的角速度增益系数 |
+| `startup_boost_wz_limit` | 0.6   | 启动时的角速度限制   |
+| `startup_cmd_vx_eps`     | 0.01  | 启动命令速度阈值    |
+| `startup_speed_vx_eps`   | 0.02  | 启动实际速度阈值    |
+| `startup_goal_distance`  | 0.30  | 启动目标距离阈值    |
+| `startup_lookahead`      | 8     | 启动时的前瞻步数    |
+
+### 8.7 路径对齐代价参数
 
 | 参数                                 | 默认值   | 描述            |
 | ---------------------------------- | ----- | ------------- |
-| `path_align_weight`                | 10.0  | 路径对齐权重        |
-| `path_align_offset`                | 20    | 从最远路径点向前偏移的步数 |
-| `path_align_threshold`             | 0.5   | 距离阈值（m）       |
-| `path_align_traj_step`             | 4     | 轨迹点采样步长       |
+| `path_align_weight`                | 15.0  | 路径对齐权重        |
+| `path_align_offset`                | 4     | 从最远路径点向前偏移的步数 |
+| `path_align_threshold`             | 0.3   | 距离阈值（m）       |
+| `path_align_traj_step`             | 1     | 轨迹点采样步长       |
 | `path_align_obstacle_check_radius` | 0.15  | 路径对齐障碍物检查半径   |
-| `path_align_max_occupancy_ratio`   | 0.90  | 路径阻塞比例阈值      |
+| `path_align_max_occupancy_ratio`   | 0.45  | 路径阻塞比例阈值      |
 | `path_align_use_orientations`      | false | 是否考虑路径朝向      |
 
-### 8.7 路径角度代价参数
+### 8.8 路径角度代价参数
 
 | 参数                     | 默认值  | 描述                         |
 | ---------------------- | ---- | -------------------------- |
-| `path_angle_weight`    | 2.2  | 路径角度权重                     |
+| `path_angle_weight`    | 5.0  | 路径角度权重                     |
 | `path_angle_offset`    | 4    | 从最远路径点向前偏移的步数              |
-| `path_angle_threshold` | 0.5  | 距离阈值（m）                    |
-| `path_angle_max`       | 0.785 | 最大允许角度偏差（rad）              |
+| `path_angle_threshold` | 0.3  | 距离阈值（m）                    |
+| `path_angle_max`       | 0.15 | 最大允许角度偏差（rad）              |
 | `path_angle_mode`      | 0    | 角度模式：0=偏好前进，1=无偏好，2=考虑路径朝向 |
 
-### 8.8 路径跟随代价参数
+### 8.9 路径跟随代价参数
 
 | 参数                      | 默认值 | 描述            |
 | ----------------------- | --- | ------------- |
-| `path_follow_weight`    | 5.0 | 路径跟随权重        |
-| `path_follow_offset`    | 6   | 从最远路径点向前偏移的步数 |
-| `path_follow_threshold` | 1.4 | 距离阈值（m）       |
+| `path_follow_weight`    | 8.0 | 路径跟随权重        |
+| `path_follow_offset`    | 4   | 从最远路径点向前偏移的步数 |
+| `path_follow_threshold` | 0.4 | 距离阈值（m）       |
 
-### 8.9 目标点代价参数
+### 8.10 目标点代价参数
 
 | 参数                     | 默认值 | 描述            |
 | ---------------------- | --- | ------------- |
 | `goal_weight`          | 5.0 | 目标点权重         |
-| `goal_threshold`       | 1.4 | 激活目标点代价的距离阈值  |
+| `goal_threshold`       | 0.8 | 激活目标点代价的距离阈值  |
 | `goal_angle_weight`    | 3.0 | 目标角度权重        |
-| `goal_angle_threshold` | 0.5 | 激活目标角度代价的距离阈值 |
+| `goal_angle_threshold` | 0.6 | 激活目标角度代价的距离阈值 |
 
-### 8.10 其他代价参数
+### 8.11 其他代价参数
 
 | 参数                         | 默认值  | 描述                     |
 | -------------------------- | ---- | ---------------------- |
 | `prefer_forward_weight`    | 3.0  | 偏好前进权重                 |
 | `prefer_forward_threshold` | 0.5  | 距离阈值                   |
 | `constraint_weight`        | 3.0  | 约束代价权重                 |
-| `constraint_vx_max`       | 1.2  | ConstraintCritic 使用的最大线速度  |
-| `constraint_vx_min`       | -0.25 | ConstraintCritic 使用的最小线速度 |
-| `constraint_vy_max`       | 1.2  | ConstraintCritic 使用的最大横向速度 |
-| `constraint_wz_max`       | 2.0  | ConstraintCritic 使用的最大角速度  |
 | `motion_model_type`        | 0    | 运动模型类型：0=差速，1=全向，2=阿克曼 |
-| `velocity_deadband_weight` | 35.0 | 速度死区权重                 |
+| `velocity_deadband_weight` | 0.5  | 速度死区权重                 |
 | `velocity_deadband_vx`     | 0.05 | 线速度死区阈值                |
 | `velocity_deadband_vy`     | 0.05 | 横向速度死区阈值               |
 | `velocity_deadband_wz`     | 0.1  | 角速度死区阈值                |
 
-### 8.11 SG 滤波器参数
+### 8.12 SG 滤波器参数
 
 | 参数                       | 默认值   | 描述              |
 | ------------------------ | ----- | --------------- |
 | `use_sg_filter`          | true  | 是否启用 SG 滤波器     |
-| `shift_control_sequence` | true  | 是否启用控制序列时序平滑    |
+| `shift_control_sequence` | false | 是否启用控制序列时序平滑    |
 | `retry_attempt_limit`    | 2     | fallback 重试次数限制 |
 | `use_mean_normalization` | false | 是否使用均值归一化       |
 
-### 8.12 运动模型参数
+### 8.13 运动模型参数
 
 | 参数                             | 默认值         | 描述                            |
 | ------------------------------ | ----------- | ----------------------------- |
 | `motion_model`                 | "DiffDrive" | 运动模型：DiffDrive/Omni/Ackermann |
 | `ackermann_min_turning_radius` | 0.3         | 阿克曼最小转弯半径（m）                  |
 
-### 8.13 差速模式配置要点
+### 8.14 全向/差速自动切换参数
+
+| 参数                            | 默认值  | 描述             |
+| ----------------------------- | ---- | -------------- |
+| `enable_omni_switching`       | true | 是否启用全向/差速自动切换  |
+| `omni_trigger_obstacle_dist`  | 0.9  | 触发全向模式的障碍物距离阈值 |
+| `omni_trigger_path_deviation` | 0.3  | 触发全向模式的路径偏离阈值  |
+| `diff_restore_path_threshold` | 0.20 | 恢复差速模式的路径偏离阈值  |
+| `omni_switch_delay_frames`    | 3    | 模式切换延迟帧数       |
+
+### 8.15 差速模式配置要点
 
 切换到差速模式时，需要修改以下关键参数：
 
@@ -950,56 +993,9 @@ motion_model: "DiffDrive"          # 运动模型设为差速
 motion_model_type: 0               # 约束代价中的模型类型
 vx_min: -0.0                       # 不允许倒车（或设为负值允许）
 vy_std: 0.0                        # 横向速度噪声设为 0
+enable_omni_switching: false       # 关闭全向切换（纯差速模式）魔改部分
 consider_footprint: true           # 建议开启足迹检测
 robot_radius: 0.35                 # 根据实际机器人尺寸调整
-```
-
-### 8.14 RC-ESDF 形状感知避障参数
-
-基于 RC-ESDF (Robo-Centric ESDF) 的任意多边形 footprint 精确碰撞检测。启用后自动替代 ObstaclesCritic 的避障功能。
-
-| 参数 | 默认值 | 描述 |
-|---|---|---|
-| `use_esdf_critic` | false | 是否启用 ESDF 批评项 |
-| `esdf_weight` | 5.0 | ESDF 软惩罚区代价值权重 |
-| `esdf_collision_cost` | 100000.0 | 碰撞代价（障碍物进入轮廓内部） |
-| `esdf_d_hard` | 0.0 | 硬碰撞距离阈值（米），dist < d_hard 视为碰撞 |
-| `esdf_d_margin` | 0.5 | 软惩罚边界距离（米），d_hard ≤ dist < d_margin 为软惩罚区 |
-| `esdf_cost_scaling` | 5.0 | 代价指数衰减速度 |
-| `esdf_near_goal_distance` | 0.5 | 接近目标时关闭 ESDF 的距离阈值 |
-| `esdf_width` | 10.0 | ESDF 地图物理宽度（米） |
-| `esdf_height` | 10.0 | ESDF 地图物理高度（米） |
-| `esdf_resolution` | 0.05 | ESDF 地图分辨率（米/像素） |
-| `esdf_obstacle_range` | 5.0 | 障碍物考虑范围（米） |
-| `esdf_check_step` | 2 | 轨迹检查步长（每隔 N 个点检查一次） |
-| `esdf_voxel_size` | 0.1 | 障碍物体素降采样尺寸（米），0.0 不降采样 |
-| `esdf_grad_weight` | 0.5 | 梯度引导权重 [0,1]，0=纯距离惩罚，1=最大梯度引导 |
-| `esdf_robot_radius` | 0.25 | ESDF 查询越界时的圆形回退半径（米） |
-| `esdf_prefilter_threshold` | 2.0 | BFS 预过滤距离阈值（米） |
-| `esdf_footprint` | [] | 机器人多边形轮廓顶点（Body Frame），格式 [x1,y1,x2,y2,...] |
-
-**ESDF 三段式代价策略**：
-
-| 距离区间 | 判定 | 处理方式 |
-|---|---|---|
-| dist < d_hard | 硬碰撞 | 赋予 collision_cost，终止该轨迹评估 |
-| d_hard ≤ dist < d_margin | 软惩罚区 | 指数衰减惩罚 + 梯度引导调制 |
-| dist ≥ d_margin | 安全区 | 无代价 |
-
-**梯度引导调制公式**（已在 EsdfCritic 中实现）：
-
-$$\text{alignment} = -\frac{\mathbf{v}\_{\text{body}} \cdot \nabla D}{|\mathbf{v}\_{\text{body}}| \cdot |\nabla D|}, \quad \text{modulation} = \max(0.1, 1 - w_g \cdot \text{alignment})$$
-
-其中 $\nabla D$ 是 RC-ESDF 的解析梯度（指向距离增大方向），$\mathbf{v}_{\text{body}}$ 是机器人 Body Frame 速度。由于梯度在障碍物位置处计算，需取反方向来对应障碍物在 Body Frame 中的视在运动：
-- $\text{alignment} > 0$：机器人远离碰撞 → modulation < 1（降低惩罚）
-- $\text{alignment} < 0$：机器人靠近碰撞 → modulation > 1（加重惩罚）
-
-**启用示例**：
-
-```yaml
-use_esdf_critic: true
-esdf_footprint: [0.30, 0.225, 0.30, -0.225, -0.30, -0.225, -0.30, 0.225]  # 0.6m×0.45m 矩形
-consider_footprint: false  # ESDF 启用时建议关闭，避免重复计算
 ```
 
 ***
@@ -1050,8 +1046,8 @@ mppi::Twist2D cmd = controller.computeVelocityCommands(robot_pose, robot_speed);
 2. 接收里程计 → 更新机器人位姿和速度
 3. 接收全局路径 → 存储路径点
 4. 定时器触发（50ms）：
-   a. 检查是否到达目标（< goal_tolerance）
-   b. 更新障碍物 + 路径有效性
+   a. 检查是否到达目标（< 0.20m）
+   b. 更新障碍物 + 路径有效性 + 运动模型切换
    c. 计算速度指令：
       i.  裁剪路径（以机器人为中心，保留 prune_distance 内的点）
       ii. 迭代优化：
@@ -1060,10 +1056,12 @@ mppi::Twist2D cmd = controller.computeVelocityCommands(robot_pose, robot_speed);
           - 各 Critic 评分
           - Softmax 加权更新控制序列
       iii. 碰撞检测与恢复
-      iv.  SG 滤波
-      v.   取第一个控制量
-   d. 发布速度指令
-   e. 发布调试轨迹
+      iv.  阻塞检测
+      v.   SG 滤波
+      vi.  取第一个控制量
+   d. 启动辅助（可选）
+   e. 发布速度指令
+   f. 发布调试轨迹
 ```
 
 ### 10.2 路径裁剪
@@ -1086,6 +1084,30 @@ Nav2 风格的路径裁剪，使索引 0 对应机器人当前位置：
 2. 尝试 `fallback()`：重置控制序列，重新采样
 3. 最多重试 `retry_attempt_limit` 次
 4. 超过重试次数后抛出异常，ROS1 节点捕获后输出零速度
+
+### 10.5 全向/差速自动切换
+
+切换条件：
+
+| 方向    | 条件                                                                                | 动作                  |
+| ----- | --------------------------------------------------------------------------------- | ------------------- |
+| 差速→全向 | 最近障碍物 < `omni_trigger_obstacle_dist` 或 路径偏离 > `omni_trigger_path_deviation`       | 切换到 OmniMotionModel |
+| 全向→差速 | 最近障碍物 > `omni_trigger_obstacle_dist × 1.2` 且 路径偏离 < `diff_restore_path_threshold` | 恢复基础运动模型            |
+
+切换时执行：
+
+1. `optimizer_->softReset()`：重置控制序列
+2. 创建新的运动模型
+3. `optimizer_->setMotionModel()`：更新运动模型
+4. 更新 ConstraintCritic 参数
+
+延迟机制：连续 `omni_switch_delay_frames` 帧满足条件才执行切换，防止频繁切换。
+
+### 10.6 启动辅助
+
+当机器人速度接近零且无障碍物时，根据路径方向施加初始速度：
+
+$$v\_x = v\_{\text{boost}}, \quad \omega\_z = \text{clamp}(K\_p \cdot \Delta\theta, -\omega\_{\max}, \omega\_{\max})$$
 
 ***
 
@@ -1163,7 +1185,7 @@ for (size_t i = start_idx + 1; i < path_distances.size(); ++i) {
 | 障碍物来源 | 激光点云（直接输入）                | Costmap2D 全局代价地图                             |
 | 距离查询  | 自建局部栅格 BFS 距离场，可接入RC-ESDF | Costmap2D 膨胀层 + FootprintCollisionChecker    |
 | 动态障碍物 | 内置线性预测支持                  | 无（依赖代价地图更新）                                  |
-| 足迹检测  | 自实现坐标变换 + 栅格查询，ESDF 支持任意多边形 | nav2\_costmap\_2d::FootprintCollisionChecker |
+| 足迹检测  | 自实现坐标变换 + 栅格查询            | nav2\_costmap\_2d::FootprintCollisionChecker |
 
 ### 12.3 数值库
 
@@ -1172,26 +1194,29 @@ for (size_t i = start_idx + 1; i < path_distances.size(); ++i) {
 | 矩阵运算  | xtensor           | Eigen                     |
 | 随机数生成 | xt::random::randn | std::normal\_distribution |
 
-### 12.4 算法增强
+### 12.4 算法增强\*一些魔改
 
 本项目在 Nav2 MPPI 基础上增加的功能：
 
 | 增强功能          | 描述                               | Nav2 状态     |
 | ------------- | -------------------------------- | ----------- |
+| **阻塞检测机制**    | 通过 wz/vx 比率和连续帧检测，识别原地打转并输出零速度   | 无此机制        |
+| **全向/差速自动切换** | 根据障碍物距离和路径偏离自动切换运动模型             | 需手动配置       |
 | **自适应温度**     | 根据代价分布范围动态调整 softmax 温度          | 使用固定温度      |
 | **均值归一化选项**   | 支持均值归一化替代 min 归一化                | 仅 min 归一化   |
-| **路径点有效性检查**  | PathFollowCritic 可跳过被障碍物阻挡的路径点   | 无此功能        |
+| **路径点有效性检查**  | PathFollowCritic 可跳过被障碍物阻挡的路径点   | 基础实现        |
 | **路径阻塞检测**    | PathAlignCritic 在路径被大量阻塞时自动失效    | 基础实现        |
 | **动态障碍物预测**   | ObstaclesCritic 支持基于速度的动态障碍物位置预测 | 无（依赖代价地图更新） |
-| **ESDF 形状感知避障** | EsdfCritic 基于 RC-ESDF 支持任意多边形 footprint 精确碰撞检测 + 解析梯度引导 | 无（仅圆形模型） |
+| **启动辅助**      | 解决零速度启动困境/代码冗余/无效                        | 无此功能        |
+| **任意形状机器人避碰**      | 避障critic接入RC-ESDF                        | 无此功能        |
+
 
 ### 12.5 Critic 差异
 
 | Critic                 | 本项目           | Nav2 MPPI  |
 | ---------------------- | ------------- | ---------- |
 | CostCritic             | 无             | 有（基于代价地图值） |
-| ObstaclesCritic        | 栅格距离场 + 动态预测  | 代价地图膨胀层查询  |
-| EsdfCritic             | RC-ESDF 形状感知避障（任意多边形 + 解析梯度引导） | 无 |
+| ObstaclesCritic        | BFS栅格距离场+ RC-ESDF + 动态预测  | 代价地图膨胀层查询  |
 | PathAlignCritic        | 路径阻塞检测 + 朝向考虑 | 基础实现       |
 | PathAngleCritic        | 三种角度模式        | 三种角度模式     |
 | VelocityDeadbandCritic | 有             | 有          |
@@ -1217,26 +1242,20 @@ for (size_t i = start_idx + 1; i < path_distances.size(); ++i) {
 | 特性   | 本项目          | Nav2 MPPI       |
 | ---- | ------------ | --------------- |
 | 职责划分 | 每个文件单一职责     | 多个类内联在同一文件，插件制  |
-| 可维护性 | 高（模块独立，接口清晰） | 低（修改一处影响全局）     |
+| 可维护性 | 高（模块独立，接口清晰） | 中（看理解程度）     |
 | 编译依赖 | 仅 xtensor    | Eigen + Nav2 全栈 |
 
 ***
 
 ## 13. 许可证
 
-Copyright © 2025 SA-MPPI Project
+Copyright © 2025 MPPI ROS1 Project
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-    http://www.apache.org/licenses/LICENSE-2.0
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 ***
 
@@ -1257,11 +1276,8 @@ limitations under the License.
 - xtensor（头文件-only 多维数组库）: <https://github.com/xtensor-stack/xtensor>
 - xsimd（C++ SIMD 加速库）: <https://github.com/xtensor-stack/xsimd>
 - xtl（xtensor 基础模板库）: <https://github.com/xtensor-stack/xtl>
-- Eigen3（线性代数库）: <https://eigen.tuxfamily.org/>
-- RC-ESDF（Robo-Centric ESDF 库）: <https://github.com/HKAS-X/RC-ESDF>
 
 ### 14.4 相关博客
 
 - [MPPI 局部路径规划控制器 —— 从 Nav2 解耦的模块化 ROS1 实现](https://blog.csdn.net/qq_56908984/article/details/158774722?sharetype=blogdetail\&sharerId=158774722\&sharerefer=PC\&sharesource=qq_56908984\&spm=1011.2480.3001.8118)
-- [SA-MPPI：基于 RC-ESDF 的任意形状机器人实时轨迹优化](https://blog.csdn.net/qq_56908984/article/details/160439414)
 
