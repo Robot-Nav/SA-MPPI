@@ -42,7 +42,7 @@
 
 ## 1. 项目概述
 
-从 ROS2 Nav2 框架中解耦的 MPPI（Model Predictive Path Integral）控制器实现，采用 **C++17** 编写，适配 ROS1 环境。核心控制器与 Nav2 基础设施（rclcpp、nav2\_core、nav2\_costmap\_2d、pluginlib 等）**无依赖**，仅需标准 C++17 和头文件-only 的 `xtensor` 数值库。
+从 ROS2 Nav2 框架中解耦的 MPPI（Model Predictive Path Integral）控制器实现，采用 **C++17** 编写，适配 ROS1 环境。核心控制器与 Nav2 基础设施（rclcpp、nav2\_core、nav2\_costmap\_2d、pluginlib 等）**无依赖**，仅需标准 C++17 和头文件-only 的 `xtensor` 数值库，与RC-ESDF算法进行结合，将RC-ESDF的精确碰撞检测与解析梯度查询作为MPPI的一个避障批评项来提高MPPI的任意形状机器人动态避障灵活性与平滑性等。
 
 ### 1.1 核心定位
 
