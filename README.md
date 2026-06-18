@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Status-Active-brightgreen.svg" alt="Status">
 </p>
 
-> **Declaration**: This repository is a decoupled version of the MPPI local planner from Navigation2. Due to limited technical expertise, there may be some "hacky" modifications and non-standard code. Some implementation logic may differ from the original version. **The code is under continuous development**. If there are any inaccuracies, please feel free to point them out — your understanding is greatly appreciated! Issues and PRs are welcome.
+> **Declaration**: **[👉 README_CN ](https://github.com/Robot-Nav/SA-MPPI/blob/main/README_CN.md)**This repository is a decoupled version of the MPPI local planner from Navigation2. Due to limited technical expertise, there may be some "hacky" modifications and non-standard code. Some implementation logic may differ from the original version. **The code is under continuous development**. If there are any inaccuracies, please feel free to point them out — your understanding is greatly appreciated! Issues and PRs are welcome.
 
 > **Reference Blogs**:
 >
