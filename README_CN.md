@@ -11,6 +11,9 @@
 
 > **声明**：本仓库是对 Navigation2 中 MPPI 局部规划器的解耦版本。由于个人技术能力有限，代码中存在一些"魔改"痕迹与不规范之处，部分实现逻辑可能与原版存在差异，**代码实时更新中**。如有不当之处，还望各位大佬多多指正，感谢包容！欢迎提 Issue 或 PR 一起完善。
 
+> **强烈推荐 Website**：[👉 MPPI变种 ](https://github.com/Robot-Nav/SA-MPPI/blob/main/README_CN.md)
+> <img width="1056" height="622" alt="image" src="https://github.com/user-attachments/assets/de6184a6-7b1b-442a-9997-b3f97421c26e" /> 
+
 > **参考博客**：
 >
 > 1、[Shape-Aware MPPI（SA MPPI）算法：基于RC-ESDF的任意形状机器人实时轨迹优化](https://blog.csdn.net/qq_56908984/article/details/160439414)
