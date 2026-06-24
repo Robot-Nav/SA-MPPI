@@ -11,6 +11,9 @@
 
 > **Declaration**: [👉 README_CN ](https://github.com/Robot-Nav/SA-MPPI/blob/main/README_CN.md)This repository is a decoupled version of the MPPI local planner from Navigation2. Due to limited technical expertise, there may be some "hacky" modifications and non-standard code. Some implementation logic may differ from the original version. **The code is under continuous development**. If there are any inaccuracies, please feel free to point them out — your understanding is greatly appreciated! Issues and PRs are welcome.
 
+> **Highly recommend website**：[👉 Different MPPI ](https://github.com/Robot-Nav/SA-MPPI/blob/main/README_CN.md)
+> <img width="1056" height="622" alt="image" src="https://github.com/user-attachments/assets/de6184a6-7b1b-442a-9997-b3f97421c26e" />
+
 > **Reference Blogs**:
 >
 > 1. [Shape-Aware MPPI (SA MPPI) Algorithm: Real-time Trajectory Optimization for Arbitrarily Shaped Robots Based on RC-ESDF](https://blog.csdn.net/qq_56908984/article/details/160439414)
